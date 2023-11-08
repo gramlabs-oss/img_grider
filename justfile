@@ -3,4 +3,7 @@ test:
     mix test
 
 native-test:
-    (cd native && cargo test)
+    just native-cargo test
+
+native-cargo +args='':
+     (cd native && cargo {{args}})
