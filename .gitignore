@@ -24,3 +24,6 @@ img_grider-*.tar
 
 # Temporary files, for example, from tests.
 /tmp/
+
+# Ignore test assets.
+/test/assets/
