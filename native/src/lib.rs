@@ -1,5 +1,6 @@
 use magick_rust::{
-    bindings::CompositeOperator_OverCompositeOp, magick_wand_genesis, MagickWand, PixelWand,
+    bindings::CompositeOperator_OverCompositeOp, magick_wand_genesis, DrawingWand, MagickWand,
+    PixelWand,
 };
 use std::{path::PathBuf, sync::Once};
 use thiserror::Error as ThisError;
@@ -20,7 +21,7 @@ pub enum Error {
 type Result<T> = std::result::Result<T, Error>;
 
 pub struct Scheme {
-    // 输出目标目录
+    // 输出目录
     pub target_dir: String,
     // 扩展名
     pub extname: String,
@@ -28,6 +29,8 @@ pub struct Scheme {
     pub indi_width: usize,
     // 个体高度
     pub indi_height: usize,
+    // 水印字体大小
+    pub watermark_font_size: f64,
 }
 
 pub fn generate(photos: Vec<String>, scheme: Scheme) -> Result<String> {
@@ -43,9 +46,28 @@ pub fn generate(photos: Vec<String>, scheme: Scheme) -> Result<String> {
     )?;
 
     let mut photo_wands = vec![];
-    for photo in photos {
-        let wand = MagickWand::new();
-        wand.read_image(&photo)?;
+    for (i, photo) in photos.iter().enumerate() {
+        let mut wand = MagickWand::new();
+        let mut draw = DrawingWand::new();
+        let mut fill = PixelWand::new();
+        let mut border = PixelWand::new();
+        // 设置水印颜色和透明度
+        fill.set_color("white")?;
+        fill.set_alpha(0.45);
+        // 设置水印边框颜色
+        border.set_color("black")?;
+        // 设置水印的字体家族、大小、粗细、颜色
+        draw.set_font_family("mono")?;
+        draw.set_font_size(scheme.watermark_font_size);
+        draw.set_font_weight(800);
+        draw.set_fill_color(&fill);
+        // 设置水印的边框颜色和宽度
+        draw.set_stroke_color(&border);
+        draw.set_stroke_width(1.0);
+        // 绘制水印和位置
+        draw.draw_annotation(1.0, scheme.watermark_font_size, &(i + 1).to_string())?;
+        wand.read_image(photo)?;
+        wand.draw_image(&draw)?;
         photo_wands.push(wand);
     }
 
@@ -86,6 +108,7 @@ fn test_generate() {
             extname: String::from("jpg"),
             indi_width: 180,
             indi_height: 120,
+            watermark_font_size: 54.0,
         },
     );
 
