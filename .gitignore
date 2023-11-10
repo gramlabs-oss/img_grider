@@ -27,3 +27,6 @@ img_grider-*.tar
 
 # Ignore test assets.
 /test/assets/
+
+# Ignore priv/native libraries.
+/priv/native/*.so
