@@ -6,4 +6,4 @@ native-test:
     just native-cargo test
 
 native-cargo +args='':
-     (cd native && cargo {{args}})
+     (cd native/imggrider && cargo {{args}})

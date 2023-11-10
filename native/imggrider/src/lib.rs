@@ -1,8 +1,9 @@
+// use libc::{c_char, size_t};
 use magick_rust::{
     bindings::CompositeOperator_OverCompositeOp, magick_wand_genesis, DrawingWand, MagickWand,
     PixelWand,
 };
-use std::{path::PathBuf, sync::Once};
+use std::{/*ffi::CStr,*/ path::PathBuf, str::Utf8Error, sync::Once};
 use thiserror::Error as ThisError;
 use uuid::Uuid;
 
@@ -14,12 +15,17 @@ pub enum Error {
     #[error("Invalid filename")]
     InvalidFilename,
     // 转换 MagickError
-    #[error("Magick error: {0}")]
+    #[error("Magick: {0}")]
     MagickError(#[from] magick_rust::MagickError),
+    // 转换 Utf8Error
+    #[error("Utf8: {0}")]
+    Utf8Error(#[from] Utf8Error),
 }
 
 type Result<T> = std::result::Result<T, Error>;
 
+#[derive(Debug)]
+// TODO: 支持从外部传入 `Scheme` 结构。
 pub struct Scheme {
     // 输出目录
     pub target_dir: String,
@@ -33,7 +39,93 @@ pub struct Scheme {
     pub watermark_font_size: f64,
 }
 
-pub fn generate(photos: Vec<String>, scheme: Scheme) -> Result<String> {
+// #[derive(Debug)]
+// #[repr(C)]
+// pub struct CArray<T> {
+//     pub len: size_t,
+//     pub data: *const T,
+// }
+
+// type PhotosPtr = *const CArray<*const c_char>;
+
+// trait AsVec<T> {
+//     fn as_vec(self) -> Result<Vec<T>>;
+// }
+
+// impl AsVec<String> for PhotosPtr {
+//     fn as_vec(self) -> Result<Vec<String>> {
+//         let c_array = unsafe { &*self };
+//         let convert_rs = unsafe {
+//             let slice = std::slice::from_raw_parts(c_array.data, c_array.len);
+//             slice
+//                 .iter()
+//                 .map(|ptr| CStr::from_ptr(*ptr).to_str())
+//                 .collect::<Vec<_>>()
+//         };
+
+//         let mut vector = vec![];
+//         for r in convert_rs {
+//             match r {
+//                 Err(e) => return Err(Error::from(e)),
+//                 Ok(s) => vector.push(s.to_string()),
+//             }
+//         }
+
+//         Ok(vector)
+//     }
+// }
+
+// fn generate(photos_ptr: PhotosPtr) {
+//     // TODO: 添加错误处理。
+//     let photos = match photos_ptr.as_vec() {
+//         Err(_e) => return,
+//         Ok(photos) => photos,
+//     };
+
+//     let assets_path = PathBuf::from("..").join("test").join("assets");
+//     match _generate(
+//         photos,
+//         Scheme {
+//             target_dir: assets_path.to_str().unwrap().to_string(),
+//             extname: String::from("jpg"),
+//             indi_width: 180,
+//             indi_height: 120,
+//             watermark_font_size: 54.0,
+//         },
+//     ) {
+//         Ok(_) => return,
+//         Err(_e) => return,
+//     }
+// }
+
+rustler::init!("Elixir.ImgGrider", [generate]);
+
+#[rustler::nif]
+fn generate(photos: Vec<String>) {
+    let assets_path = PathBuf::from("test").join("assets");
+
+    match _generate(
+        photos,
+        Scheme {
+            target_dir: assets_path.to_str().unwrap().to_string(),
+            extname: String::from("jpg"),
+            indi_width: 180,
+            indi_height: 120,
+            watermark_font_size: 54.0,
+        },
+    ) {
+        Ok(_) => {
+            // TODO: 处理成功
+            return;
+        }
+        Err(_e) => {
+            // TODO: 处理失败
+            return;
+        }
+    }
+}
+
+fn _generate(photos: Vec<String>, scheme: Scheme) -> Result<String> {
     START.call_once(magick_wand_genesis);
 
     let output_path = PathBuf::from(scheme.target_dir).join(random_fname(&scheme.extname));
@@ -92,7 +184,7 @@ fn random_fname(ext: &str) -> String {
 
 #[test]
 fn test_generate() {
-    let assets_path = PathBuf::from("..").join("test").join("assets");
+    let assets_path = PathBuf::from("..").join("..").join("test").join("assets");
     let mut photos = vec![];
 
     for i in 1..10 {
@@ -101,7 +193,7 @@ fn test_generate() {
         photos.push(fpath.as_os_str().to_str().unwrap().to_string());
     }
 
-    let r = generate(
+    let r = _generate(
         photos,
         Scheme {
             target_dir: assets_path.to_str().unwrap().to_string(),

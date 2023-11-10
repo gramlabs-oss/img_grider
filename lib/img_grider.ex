@@ -1,18 +1,6 @@
 defmodule ImgGrider do
-  @moduledoc """
-  Documentation for `ImgGrider`.
-  """
+  use Rustler, otp_app: :img_grider, crate: "imggrider"
 
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> ImgGrider.hello()
-      :world
-
-  """
-  def hello do
-    :world
-  end
+  # When your NIF is loaded, it will override this function.
+  def generate(_photos), do: :erlang.nif_error(:nif_not_loaded)
 end
