@@ -2,7 +2,8 @@ with import <nixpkgs> { };
 
 stdenv.mkDerivation {
   name = "building-environment";
-  buildInputs = [ pkg-config imagemagick llvmPackages_12.libclang.lib ];
+  buildInputs = [ pkg-config imagemagick ];
 
-  LIBCLANG_PATH = "${llvmPackages_12.libclang.lib}/lib";
+  LIBCLANG_PATH =
+    pkgs.lib.makeLibraryPath [ pkgs.llvmPackages_latest.libclang.lib ];
 }
