@@ -14,5 +14,8 @@ test:
 clean:
     rm -rf _build/ deps/ native/imggrider/target/
 
+clean-assets:
+    rm -rf test/assets/output/*
+
 native-cargo +args='':
      (cd native/imggrider && cargo {{args}})
