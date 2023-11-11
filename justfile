@@ -13,6 +13,7 @@ test:
 
 clean:
     rm -rf _build/ deps/ native/imggrider/target/
+    just clean-assets
 
 clean-assets:
     rm -rf test/assets/output/*
