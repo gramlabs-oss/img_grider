@@ -164,7 +164,7 @@ pub fn r_generate(photos: Vec<String>, scheme: Scheme) -> Result<String> {
         let x = ((i % 3) * scheme.indi_width) as isize;
         let y = ((i / 3) * scheme.indi_height) as isize;
 
-        wand.compose_images(photo_wand, CompositeOperator_OverCompositeOp, false, x, y)?;
+        wand.compose_images(photo_wand, CompositeOperator_OverCompositeOp, true, x, y)?;
     }
 
     wand.write_image(output)?;
