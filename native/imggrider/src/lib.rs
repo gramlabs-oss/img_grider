@@ -105,7 +105,7 @@ pub struct Scheme {
 
 rustler::init!("Elixir.ImgGrider", [generate]);
 
-#[rustler::nif]
+#[rustler::nif(schedule = "DirtyCpu")]
 fn generate(photos: Vec<String>, scheme: Scheme) {
     match r_generate(photos, scheme) {
         Ok(_) => {
