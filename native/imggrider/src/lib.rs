@@ -107,7 +107,7 @@ rustler::init!("Elixir.ImgGrider", [generate]);
 
 #[rustler::nif]
 fn generate(photos: Vec<String>, scheme: Scheme) {
-    match _generate(photos, scheme) {
+    match r_generate(photos, scheme) {
         Ok(_) => {
             // TODO: 处理成功
             return;
@@ -119,7 +119,7 @@ fn generate(photos: Vec<String>, scheme: Scheme) {
     }
 }
 
-fn _generate(photos: Vec<String>, scheme: Scheme) -> Result<String> {
+pub fn r_generate(photos: Vec<String>, scheme: Scheme) -> Result<String> {
     START.call_once(magick_wand_genesis);
 
     let output_path = PathBuf::from(scheme.target_dir).join(random_fname(&scheme.format));
@@ -187,7 +187,7 @@ fn test_generate() {
         photos.push(fpath.to_str().unwrap().to_string());
     }
 
-    let r = _generate(
+    let r = r_generate(
         photos,
         Scheme {
             target_dir: assets_path.join("output").to_str().unwrap().to_string(),
