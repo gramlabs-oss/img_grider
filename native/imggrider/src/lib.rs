@@ -3,6 +3,7 @@ use magick_rust::{
     bindings::CompositeOperator_OverCompositeOp, magick_wand_genesis, DrawingWand, MagickWand,
     PixelWand,
 };
+use rustler::NifStruct;
 use std::{/*ffi::CStr,*/ path::PathBuf, str::Utf8Error, sync::Once};
 use thiserror::Error as ThisError;
 use uuid::Uuid;
@@ -24,19 +25,23 @@ pub enum Error {
 
 type Result<T> = std::result::Result<T, Error>;
 
-#[derive(Debug)]
-// TODO: 支持从外部传入 `Scheme` 结构。
+#[derive(Debug, NifStruct)]
+#[module = "ImgGrider.Scheme"]
 pub struct Scheme {
     // 输出目录
     pub target_dir: String,
     // 扩展名
-    pub extname: String,
+    pub format: String,
     // 个体宽度
     pub indi_width: usize,
     // 个体高度
     pub indi_height: usize,
+    // 水印字体家族
+    pub watermark_font_family: String,
     // 水印字体大小
     pub watermark_font_size: f64,
+    // 水印字体粗细
+    pub watermark_font_weight: usize,
 }
 
 // #[derive(Debug)]
@@ -87,7 +92,7 @@ pub struct Scheme {
 //         photos,
 //         Scheme {
 //             target_dir: assets_path.to_str().unwrap().to_string(),
-//             extname: String::from("jpg"),
+//             format: String::from("jpg"),
 //             indi_width: 180,
 //             indi_height: 120,
 //             watermark_font_size: 54.0,
@@ -101,19 +106,8 @@ pub struct Scheme {
 rustler::init!("Elixir.ImgGrider", [generate]);
 
 #[rustler::nif]
-fn generate(photos: Vec<String>) {
-    let assets_path = PathBuf::from("test").join("assets");
-
-    match _generate(
-        photos,
-        Scheme {
-            target_dir: assets_path.to_str().unwrap().to_string(),
-            extname: String::from("jpg"),
-            indi_width: 180,
-            indi_height: 120,
-            watermark_font_size: 54.0,
-        },
-    ) {
+fn generate(photos: Vec<String>, scheme: Scheme) {
+    match _generate(photos, scheme) {
         Ok(_) => {
             // TODO: 处理成功
             return;
@@ -128,7 +122,7 @@ fn generate(photos: Vec<String>) {
 fn _generate(photos: Vec<String>, scheme: Scheme) -> Result<String> {
     START.call_once(magick_wand_genesis);
 
-    let output_path = PathBuf::from(scheme.target_dir).join(random_fname(&scheme.extname));
+    let output_path = PathBuf::from(scheme.target_dir).join(random_fname(&scheme.format));
     let output = output_path.to_str().ok_or(Error::InvalidFilename)?;
     let mut wand = MagickWand::new();
     wand.new_image(
@@ -149,9 +143,9 @@ fn _generate(photos: Vec<String>, scheme: Scheme) -> Result<String> {
         // 设置水印边框颜色
         border.set_color("black")?;
         // 设置水印的字体家族、大小、粗细、颜色
-        draw.set_font_family("mono")?;
+        draw.set_font_family(&scheme.watermark_font_family)?;
         draw.set_font_size(scheme.watermark_font_size);
-        draw.set_font_weight(800);
+        draw.set_font_weight(scheme.watermark_font_weight);
         draw.set_fill_color(&fill);
         // 设置水印的边框颜色和宽度
         draw.set_stroke_color(&border);
@@ -163,7 +157,7 @@ fn _generate(photos: Vec<String>, scheme: Scheme) -> Result<String> {
         photo_wands.push(wand);
     }
 
-    wand.set_format(&scheme.extname)?;
+    wand.set_format(&scheme.format)?;
 
     for (i, photo_wand) in photo_wands.iter().enumerate() {
         // TODO: 识别宽度或高度不足的图片，居中（或拉伸）它。
@@ -190,17 +184,19 @@ fn test_generate() {
     for i in 1..10 {
         let fpath = assets_path.clone().join(format!("photo-{}.jpg", i));
 
-        photos.push(fpath.as_os_str().to_str().unwrap().to_string());
+        photos.push(fpath.to_str().unwrap().to_string());
     }
 
     let r = _generate(
         photos,
         Scheme {
-            target_dir: assets_path.to_str().unwrap().to_string(),
-            extname: String::from("jpg"),
+            target_dir: assets_path.join("output").to_str().unwrap().to_string(),
+            format: String::from("jpg"),
             indi_width: 180,
             indi_height: 120,
+            watermark_font_family: String::from("FreeMono"),
             watermark_font_size: 54.0,
+            watermark_font_weight: 600,
         },
     );
 
