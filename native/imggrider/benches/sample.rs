@@ -1,5 +1,5 @@
 use criterion::{criterion_group, criterion_main, Criterion};
-use imggrider::{r_generate, Scheme};
+use imggrider::{raw_generate, Scheme};
 
 fn generate_benchmark(c: &mut Criterion) {
     c.bench_function("generate", |b| {
@@ -26,7 +26,7 @@ fn generate_benchmark(c: &mut Criterion) {
                 watermark_font_weight: 600,
             };
 
-            r_generate(photos, scheme)
+            raw_generate(photos, scheme)
         })
     });
 }

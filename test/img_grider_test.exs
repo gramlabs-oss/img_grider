@@ -20,6 +20,8 @@ defmodule ImgGriderTest do
       |> Enum.map(fn n -> "photo-#{n}.jpg" end)
       |> Enum.map(fn name -> Path.join(assets_path, name) end)
 
-    generate(photos, scheme)
+    {:ok, path} = generate(photos, scheme)
+
+    assert File.exists?(path)
   end
 end

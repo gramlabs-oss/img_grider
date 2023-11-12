@@ -23,6 +23,27 @@ pub enum Error {
     Utf8Error(#[from] Utf8Error),
 }
 
+mod atoms {
+    rustler::atoms! {
+        invalid_filename,
+        magick_exec_error,
+        illegal_utf8
+    }
+}
+
+impl rustler::types::Encoder for Error {
+    fn encode<'a>(&self, env: rustler::Env<'a>) -> rustler::Term<'a> {
+        // TODO: 此处应该进一步包装错误的具体信息，返回有细节的错误结构。
+        let error = match self {
+            Error::InvalidFilename => atoms::invalid_filename(),
+            Error::MagickError(_) => atoms::magick_exec_error(),
+            Error::Utf8Error(_) => atoms::illegal_utf8(),
+        };
+
+        error.encode(env)
+    }
+}
+
 type Result<T> = std::result::Result<T, Error>;
 
 #[derive(Debug, NifStruct)]
@@ -106,20 +127,13 @@ pub struct Scheme {
 rustler::init!("Elixir.ImgGrider", [generate]);
 
 #[rustler::nif(schedule = "DirtyCpu")]
-fn generate(photos: Vec<String>, scheme: Scheme) {
-    match r_generate(photos, scheme) {
-        Ok(_) => {
-            // TODO: 处理成功
-            return;
-        }
-        Err(_e) => {
-            // TODO: 处理失败
-            return;
-        }
-    }
+fn generate(photos: Vec<String>, scheme: Scheme) -> Result<String> {
+    let output = raw_generate(photos, scheme)?;
+
+    Ok(output)
 }
 
-pub fn r_generate(photos: Vec<String>, scheme: Scheme) -> Result<String> {
+pub fn raw_generate(photos: Vec<String>, scheme: Scheme) -> Result<String> {
     START.call_once(magick_wand_genesis);
 
     let output_path = PathBuf::from(scheme.target_dir).join(random_fname(&scheme.format));
@@ -187,7 +201,7 @@ fn test_generate() {
         photos.push(fpath.to_str().unwrap().to_string());
     }
 
-    let r = r_generate(
+    let r = raw_generate(
         photos,
         Scheme {
             target_dir: assets_path.join("output").to_str().unwrap().to_string(),
