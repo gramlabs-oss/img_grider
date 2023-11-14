@@ -167,6 +167,12 @@ pub fn raw_generate(photos: Vec<String>, scheme: Scheme) -> Result<String> {
         // 绘制水印和位置
         draw.draw_annotation(1.0, scheme.watermark_font_size, &(i + 1).to_string())?;
         wand.read_image(photo)?;
+        // 缩放图片到固定大小
+        wand.resize_image(
+            scheme.indi_width,
+            scheme.indi_height,
+            magick_rust::bindings::FilterType_TriangleFilter,
+        );
         wand.draw_image(&draw)?;
         photo_wands.push(wand);
     }
@@ -174,7 +180,6 @@ pub fn raw_generate(photos: Vec<String>, scheme: Scheme) -> Result<String> {
     wand.set_format(&scheme.format)?;
 
     for (i, photo_wand) in photo_wands.iter().enumerate() {
-        // TODO: 识别宽度或高度不足的图片，居中（或拉伸）它。
         let x = ((i % 3) * scheme.indi_width) as isize;
         let y = ((i / 3) * scheme.indi_height) as isize;
 
