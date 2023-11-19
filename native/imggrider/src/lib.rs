@@ -3,8 +3,8 @@ use magick_rust::{
     bindings::CompositeOperator_OverCompositeOp, magick_wand_genesis, DrawingWand, MagickWand,
     PixelWand,
 };
-use rustler::NifStruct;
-use std::{/*ffi::CStr,*/ path::PathBuf, str::Utf8Error, sync::Once};
+use rustler::{Atom, NifStruct};
+use std::{/*ffi::CStr,*/ path::PathBuf, sync::Once};
 use thiserror::Error as ThisError;
 use uuid::Uuid;
 
@@ -12,32 +12,32 @@ static START: Once = Once::new();
 
 #[derive(ThisError, Debug)]
 pub enum Error {
-    // 无效的文件名
-    #[error("Invalid filename")]
-    InvalidFilename,
+    // 无效的 Unicode
+    #[error("invalid unicode")]
+    InvalidUnicode,
     // 转换 MagickError
-    #[error("Magick: {0}")]
+    #[error("{0}")]
     MagickError(#[from] magick_rust::MagickError),
-    // 转换 Utf8Error
-    #[error("Utf8: {0}")]
-    Utf8Error(#[from] Utf8Error),
 }
 
 mod atoms {
     rustler::atoms! {
-        invalid_filename,
-        magick_exec_error,
-        illegal_utf8
+        magick_exception,
+        other
     }
 }
 
 impl rustler::types::Encoder for Error {
     fn encode<'a>(&self, env: rustler::Env<'a>) -> rustler::Term<'a> {
-        // TODO: 此处应该进一步包装错误的具体信息，返回有细节的错误结构。
         let error = match self {
-            Error::InvalidFilename => atoms::invalid_filename(),
-            Error::MagickError(_) => atoms::magick_exec_error(),
-            Error::Utf8Error(_) => atoms::illegal_utf8(),
+            Error::InvalidUnicode => NifError {
+                kind: atoms::other(),
+                message: self.to_string(),
+            },
+            Error::MagickError(message) => NifError {
+                kind: atoms::magick_exception(),
+                message: message.to_string(),
+            },
         };
 
         error.encode(env)
@@ -63,6 +63,13 @@ pub struct Scheme {
     pub watermark_font_size: f64,
     // 水印字体粗细
     pub watermark_font_weight: usize,
+}
+
+#[derive(Debug, NifStruct)]
+#[module = "ImgGrider.Error"]
+pub struct NifError {
+    pub kind: Atom,
+    pub message: String,
 }
 
 // #[derive(Debug)]
@@ -137,7 +144,7 @@ pub fn raw_generate(photos: Vec<String>, scheme: Scheme) -> Result<String> {
     START.call_once(magick_wand_genesis);
 
     let output_path = PathBuf::from(scheme.target_dir).join(random_fname(&scheme.format));
-    let output = output_path.to_str().ok_or(Error::InvalidFilename)?;
+    let output = output_path.to_str().ok_or(Error::InvalidUnicode)?;
     let mut wand = MagickWand::new();
     wand.new_image(
         scheme.indi_width * 3,
