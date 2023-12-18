@@ -10,7 +10,8 @@ defmodule ImgGriderTest do
   @scheme %Scheme{
     target_dir: Path.join(@assets_path, "output"),
     indi_width: 180,
-    indi_height: 120
+    indi_height: 120,
+    watermark_font_family: "Lato"
   }
 
   test "generate/2" do

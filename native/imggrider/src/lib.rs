@@ -220,7 +220,7 @@ fn test_generate() {
             format: String::from("jpg"),
             indi_width: 180,
             indi_height: 120,
-            watermark_font_family: String::from("FreeMono"),
+            watermark_font_family: String::from("Lato"),
             watermark_font_size: 54.0,
             watermark_font_weight: 600,
         },

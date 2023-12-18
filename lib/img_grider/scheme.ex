@@ -11,7 +11,7 @@ defmodule ImgGrider.Scheme do
             format: "jpg",
             indi_width: nil,
             indi_height: nil,
-            watermark_font_family: "FreeMono",
+            watermark_font_family: "Lato",
             watermark_font_size: 54.0,
             watermark_font_weight: 600
 
