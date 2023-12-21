@@ -30,3 +30,5 @@ img_grider-*.tar
 
 # Ignore priv/native libraries.
 /priv/native/*.so
+
+/rust-toolchain
