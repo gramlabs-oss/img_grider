@@ -1,8 +1,5 @@
 // use libc::{c_char, size_t};
-use magick_rust::{
-    bindings::CompositeOperator_OverCompositeOp, magick_wand_genesis, DrawingWand, MagickWand,
-    PixelWand,
-};
+use magick_rust::{magick_wand_genesis, CompositeOperator, DrawingWand, MagickWand, PixelWand};
 use rustler::{Atom, NifStruct};
 use std::{/*ffi::CStr,*/ path::PathBuf, sync::Once};
 use thiserror::Error as ThisError;
@@ -190,7 +187,7 @@ pub fn raw_generate(photos: Vec<String>, scheme: Scheme) -> Result<String> {
         let x = ((i % 3) * scheme.indi_width) as isize;
         let y = ((i / 3) * scheme.indi_height) as isize;
 
-        wand.compose_images(photo_wand, CompositeOperator_OverCompositeOp, true, x, y)?;
+        wand.compose_images(photo_wand, CompositeOperator::Over, true, x, y)?;
     }
 
     wand.write_image(output)?;
