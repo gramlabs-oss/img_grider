@@ -1,14 +1,14 @@
 setup:
     mix deps.get
     mix compile
-    just native-cargo build
+    just cargo build
 
 format:
     mix format
-    just native-cargo fmt
+    just cargo fmt
 
 test:
-    just native-cargo test
+    just cargo test
     mix test
 
 clean:
@@ -18,5 +18,5 @@ clean:
 clean-assets:
     rm -rf test/assets/output/*
 
-native-cargo +args='':
+cargo +args='':
      (cd native/imggrider && cargo {{args}})
