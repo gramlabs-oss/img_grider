@@ -27,7 +27,7 @@ defmodule ImgGrider.MixProject do
       {:dialyxir, "~> 1.4", only: [:dev], runtime: false},
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:benchee, "~> 1.0", only: :dev},
-      {:rustler, "~> 0.30.0", runtime: false}
+      {:rustler, "~> 0.32.1", runtime: false}
     ]
   end
 end
