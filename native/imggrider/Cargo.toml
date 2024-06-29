@@ -18,11 +18,11 @@ name = "sample"
 harness = false
 
 [dependencies]
-libc = "0.2.150"
-magick_rust = { git = "https://github.com/Hentioe/magick-rust.git", branch = "master" }
-thiserror = "1.0.50"
-uuid = { version = "1.5.0", features = ["v4"] }
-rustler = "0.30.0"
+libc = "0.2.155"
+magick_rust = "1.0.0"
+rustler = "0.33.0"
+thiserror = "1.0.61"
+uuid = { version = "1.9.1", features = ["v4"] }
 
 [profile.release]
 strip = "debuginfo"

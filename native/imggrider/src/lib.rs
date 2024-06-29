@@ -175,8 +175,8 @@ pub fn raw_generate(photos: Vec<String>, scheme: Scheme) -> Result<String> {
         wand.resize_image(
             scheme.indi_width,
             scheme.indi_height,
-            magick_rust::bindings::FilterType_TriangleFilter,
-        );
+            magick_rust::FilterType::Triangle,
+        )?;
         wand.draw_image(&draw)?;
         photo_wands.push(wand);
     }
