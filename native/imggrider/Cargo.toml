@@ -19,7 +19,7 @@ harness = false
 
 [dependencies]
 libc = "0.2.155"
-magick_rust = "1.0.0"
+magick_rust = {git = "https://github.com/Hentioe/magick-rust.git", branch = "v1.0_buildfix"}
 rustler = "0.33.0"
 thiserror = "1.0.61"
 uuid = { version = "1.9.1", features = ["v4"] }
