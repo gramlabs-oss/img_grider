@@ -30,6 +30,6 @@ defmodule ImgGriderTest do
 
     assert is_struct(error, ImgGrider.Error)
     assert error.kind == :magick_exception
-    assert error.message == "failed to read image"
+    assert error.message =~ "unable to open image 'not_found.jpg': No such file or directory"
   end
 end

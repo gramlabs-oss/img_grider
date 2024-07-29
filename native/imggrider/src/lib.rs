@@ -128,16 +128,16 @@ pub struct NifError {
 //     }
 // }
 
-rustler::init!("Elixir.ImgGrider", [generate]);
-
 #[rustler::nif(schedule = "DirtyCpu")]
 fn generate(photos: Vec<String>, scheme: Scheme) -> Result<String> {
-    let output = raw_generate(photos, scheme)?;
+    let output = _generate(photos, scheme)?;
 
     Ok(output)
 }
 
-pub fn raw_generate(photos: Vec<String>, scheme: Scheme) -> Result<String> {
+rustler::init!("Elixir.ImgGrider");
+
+pub fn _generate(photos: Vec<String>, scheme: Scheme) -> Result<String> {
     START.call_once(magick_wand_genesis);
 
     let output_path = PathBuf::from(scheme.target_dir).join(random_fname(&scheme.format));
@@ -210,7 +210,7 @@ fn test_generate() {
         photos.push(fpath.to_str().unwrap().to_string());
     }
 
-    let r = raw_generate(
+    let r = _generate(
         photos,
         Scheme {
             target_dir: assets_path.join("output").to_str().unwrap().to_string(),
